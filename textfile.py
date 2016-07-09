@@ -10,6 +10,11 @@ class TextFile(object):
     引数:
         * directory
         * file_name
+    変数:
+        * file_object
+        * contents
+    処理:
+        * directoryを受け取りそのディレクトリが存在しなかったら作成する。
     """
     def __init__(self, directory, file_name):
         self.directory = directory
@@ -151,6 +156,8 @@ class FactorialTest(unittest.TestCase):
             'test test test\ntest2 test2 test2')
 
     def test_read_error(self):
+        u"""存在しないファイルをオープンしたときにNoneが返るテスト
+        """
         self.text_file = TextFile('testpath', 'error.txt')
         self.text_file_hundler = self.text_file.open_read_mode()
         self.assertEqual(
