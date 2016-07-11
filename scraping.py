@@ -68,7 +68,6 @@ class Scraping():
             except WebDriverException as error_code:
                 logmessage.logprint('PhantomJSのサービスとの接続に失敗しました。')
                 logmessage.logprint('libディレクトリにPhantomJSの実行ファイルが必要です。')
-                # logmessage.logprint(error_code)
                 return None
 
             return driver
@@ -88,7 +87,6 @@ class Scraping():
             # time.sleep(2/random.randint(1, 10))
             old_page = driver.find_element_by_tag_name('html')
             driver.get(url)
-            # print(driver.current_url)
         except HTTPError as error_code:
             logmessage.logprint(url)
             logmessage.logprint(error_code)
@@ -114,8 +112,6 @@ class Scraping():
             logmessage.logprint("Error! TimeoutException")
             logmessage.logprint(error_code)
             return None
-
-        # print(driver.current_url)
 
         return driver
 
@@ -647,7 +643,6 @@ class Scraping():
 
         # for data in enumerate(data_list):
         for data in data_list:
-            print(data)
             # 初期値として510を設定。count_dictのキーにない場合は520に。
             start_colum = 520
             # 例えば、key: カラー, value: color
@@ -674,7 +669,6 @@ class Scraping():
     def get_product_info(self, url, path=''):
         u"""商品個別のurlを受け取り、商品情報をリストにして返す
         """
-        print(self)
         if self.driver is None:
             logmessage.logprint('driverの取得に失敗しています。')
             return None
@@ -762,7 +756,10 @@ class Scraping():
             else:
                 image_name = image_name.group() + '.jpg'
                 # imageをダウンロードして保存する。
-                imagefile.download_and_save_dir_direct(image_attrs, image_name)
+                imagefile.download_and_save_dir_direct(
+                    image_attrs,
+                    'image',
+                    image_name)
                 product_list[7 + image_count] = bytes(
                     image_name, 'utf-8').decode('utf-8')
 
@@ -782,7 +779,10 @@ class Scraping():
             else:
                 # imageをダウンロードして保存する。
                 image_name = image_name.group()
-                imagefile.download_and_save_dir_direct(image_attrs, image_name)
+                imagefile.download_and_save_dir_direct(
+                    image_attrs,
+                    'image',
+                    image_name)
                 product_list[12] = bytes(image_name, 'utf-8').decode('utf-8')
 
         # path
@@ -800,7 +800,6 @@ class Scraping():
             self.driver,
             "//div[@class='mdItemInfoOption']/p")
 
-        # print(data_list)
         if data_list is not None:
             selection_list = self.get_selection_list(data_list)
 
@@ -901,5 +900,6 @@ class FactorialTest(unittest.TestCase):
         u"""クローズ処理など
         """
         pass
+
 if __name__ == '__main__':
     unittest.main()

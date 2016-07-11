@@ -2,6 +2,8 @@
 u"""イメージファイルをダウンロードしてファイルに保存する。
 """
 import os
+import unittest
+import shutil
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib.request import urlretrieve
@@ -13,6 +15,7 @@ IMAGE_DIR_NAME = '000'
 
 # イメージファイル名に重複ないように
 IMAGE_FILE_SET = set()
+
 
 def make_image_directory_name():
     u"""
@@ -35,7 +38,7 @@ def make_image_directory_name():
     return IMAGE_DIR_NAME
 
 
-def download_and_save(url, image_file_name):
+def download_and_save(url, image_dir, image_file_name):
     u"""
     目的 : urlを受け取りページにアクセスしてイメージファイルを
            ダウンロードする。
@@ -51,19 +54,22 @@ def download_and_save(url, image_file_name):
     global IMAGE_SERIAL_NUMBER  # imageの通し番号　1000ファイルごとに001からの連番を取得する
     global IMAGE_DIR_NAME       # imageの通し番号のディレクトリ名
 
+    # ./imageディレクトリを作成する。
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
 
     # 1000個ごとに新たにディレクトリを作成する。
     if IMAGE_SERIAL_NUMBER % 1000 == 0:
         IMAGE_DIR_NAME = make_image_directory_name()
-        if not os.path.exists(os.path.dirname('./image/') + '/' + IMAGE_DIR_NAME):
-            os.mkdir(os.path.dirname('./image/') + '/' + IMAGE_DIR_NAME)
+        # ./image/001ディレクトリを作成する。
+        if not os.path.exists(
+                os.path.join(image_dir, IMAGE_DIR_NAME)):
+            os.mkdir(os.path.join(image_dir, IMAGE_DIR_NAME))
         if IMAGE_SERIAL_NUMBER != 0:
             logmessage.logprint(str(IMAGE_SERIAL_NUMBER) + '個のイメージを保存しました。')
 
     image_file_path = (
-        os.path.dirname('./image/') + '/' +
-        IMAGE_DIR_NAME + '/' +
-        image_file_name
+        os.path.join(image_dir, IMAGE_DIR_NAME, image_file_name)
         )
 
     # イメージファイルを取得する
@@ -89,7 +95,7 @@ def download_and_save(url, image_file_name):
                 IMAGE_SERIAL_NUMBER = IMAGE_SERIAL_NUMBER + 1
 
 
-def download_and_save_dir_direct(url, image_file_name):
+def download_and_save_dir_direct(url, image_dir, image_file_name):
     u"""
     目的 : urlを受け取りページにアクセスしてイメージファイルを
            ダウンロードする。
@@ -103,14 +109,17 @@ def download_and_save_dir_direct(url, image_file_name):
     """
     global IMAGE_SERIAL_NUMBER  # imageの通し番号　1000ファイルごとに001からの連番を取得する
 
+    # ./imageディレクトリを作成する。
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+
     # 1000個ごとに新たにディレクトリを作成する。
     if IMAGE_SERIAL_NUMBER % 10 == 0:
         if IMAGE_SERIAL_NUMBER != 0:
             logmessage.logprint(str(IMAGE_SERIAL_NUMBER) + '個のイメージを保存しました。')
 
     image_file_path = (
-        os.path.dirname('./image/') + '/' +
-        image_file_name
+        os.path.join(image_dir, image_file_name)
         )
 
     # イメージファイルを取得する
@@ -141,3 +150,44 @@ def get_image_count():
     """
 
     return IMAGE_SERIAL_NUMBER
+
+
+class FatorialTest(unittest.TestCase):
+    u"""テスト用のクラス
+    """
+
+    def setUp(self):
+        u"""セットアップ
+        """
+        pass
+
+    def test_make_image_directory_name(self):
+        u"""イメージファイルをダウンロードして保存する。
+        """
+        image_directory_name = make_image_directory_name()
+        self.assertEqual(image_directory_name, '002')
+
+    def test_download_and_save(self):
+        u"""イメージファイルを保存するディレクトリを作成する。
+        """
+        url = 'http://item.shopping.c.yimg.jp/i/l/drmart-1_cm-298752_1'
+        download_and_save(url, 'image', 'cm-298752_1.jpg')
+        self.assertTrue(
+            os.path.exists('image/001/cm-298752_1.jpg'))
+
+    def test_download_and_save_direct(self):
+        u"""イメージファイルを保存するディレクトリを作成する。
+        """
+        url = 'http://item.shopping.c.yimg.jp/i/l/drmart-1_cm-298752_1'
+        download_and_save_dir_direct(url, 'image', 'cm-298752_1.jpg')
+        self.assertTrue(
+            os.path.exists('image/cm-298752_1.jpg'))
+
+    def tearDown(self):
+        u"""ファイルをクローズする。
+        """
+        if os.path.exists('image'):
+            shutil.rmtree('image')
+
+if __name__ == '__main__':
+    unittest.main()

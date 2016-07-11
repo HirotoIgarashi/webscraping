@@ -54,7 +54,7 @@ class Csvfile():
             'operating-side-', 'back-support-color-', 'body-color-',
             '']
 
-        # 既存のファイル読み込む
+        # 既存ファイルの読み込む
         self.open_read_mode()
 
         header_list_half = []
@@ -108,6 +108,7 @@ class Csvfile():
         serial_number = str(self.csv_file_serial_number)
         if len(serial_number) == 1:
             serial_number = '0' + serial_number
+        # print(serial_number)
         file_name = file_name + serial_number
 
         return file_name
@@ -130,28 +131,30 @@ class Csvfile():
         files = [f for f in os.listdir('.')]
         if len(files) is 0:
             os.chdir(backup_cwd)
+            self.csv_file_serial_number = 1
             return
         else:
             files.sort(key=os.path.getmtime)
         os.chdir(backup_cwd)
 
-        print(files)
-
         for file_name in files:
             # 読み込んだファイル名からyymmddを求める。
             if file_name.startswith('data_'):
-                print(file_name)
                 self.part_file_name = file_name.split('.')[0].split('_')[1]
                 file_path = os.path.join(self.directory, file_name)
+
                 with open(file_path, 'r', encoding='utf-8') as file_contents:
                     reader = csv.reader(file_contents)
-                    # ヘッダーを読み飛ばす
-                    next(reader)
-                    i = 0
-                    for row in reader:
-                        i += 1
-                    print(i)
-                    self.row_serial_number += i
+                    # print(reader.line_num)
+                    # 中身が何もなかったら何もしない。
+                    if reader.line_num != 0:
+                        # ヘッダーを読み飛ばす
+                        header = next(reader)
+                        print(header)
+                        i = 0
+                        for row in reader:
+                            i += 1
+                        self.row_serial_number += i
 
                 self.csv_file_serial_number += 1
 
@@ -161,11 +164,9 @@ class Csvfile():
         u"""追記モードでオープンしてfile objectを返す
         既にファイルがある場合は削除される。
         """
-        # print('open_append_mode start')
         self.file_name = self.make_csv_file_name()
         self.file_path = os.path.join(
-            self.directory, self.file_name) + '.csv'
-        # print(self.file_path)
+            self.directory, self.file_name + '.csv')
 
         self.csv_file = open(
             self.file_path,
@@ -219,8 +220,6 @@ class Csvfile():
         if self.row_serial_number % 19999 == 0:
             self.csv_file.close()
 
-        # print(self.row_serial_number)
-
         return self.row_serial_number
 
     def get_record_count(self):
@@ -245,34 +244,30 @@ class FactorialTest(unittest.TestCase):
         """
         self.csv_file = Csvfile('./testdir/')
 
-    # def test_open_write_mode(self):
-    #     u"""書き込み用にファイルをオープンするテスト
-    #     """
-    #     self.csv_file = self.csv_file.open_write_mode()
-    #     self.assertTrue(os.path.exists('testdir/data_160706_01.csv'))
+    def test_open_append_mode(self):
+        u"""追記用にファイルをオープンするテスト
+        """
+        csv_file = self.csv_file.open_append_mode()
+        writer = csv.writer(csv_file, lineterminator='\n')
+        writer.writerow(['test1', 'test2'])
+        self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
 
-    # def test_open_append_mode(self):
-    #     u"""追記用にファイルをオープンするテスト
-    #     """
-    #     self.csv_file = self.csv_file.open_append_mode()
-    #     self.assertTrue(os.path.exists('testdir/data_160706_01.csv'))
+    def test_write_row(self):
+        u"""ファイルに書き込むテスト
+        """
+        self.csv_file.writerow(['test1', 'test2'])
+        self.csv_file.writerow(['test3', 'test4'])
+        self.csv_file.writerow(['test5', 'test6'])
+        self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
 
-    # def test_write_row(self):
-    #     u"""ファイルに書き込むテスト
-    #     """
-    #     self.csv_file.writerow(['test1', 'test2'])
-    #     self.csv_file.writerow(['test3', 'test4'])
-    #     self.csv_file.writerow(['test5', 'test6'])
-    #     self.assertTrue(os.path.exists('testdir/data_160706_01.csv'))
-
-    # def test_append_row(self):
-    #     u"""追記用にファイルをオープンして書き込むテスト
-    #     """
-    #     self.csv_file.writerow(['test7', 'test8'])
-    #     self.csv_file.writerow(['test9', 'test10'])
-    #     self.csv_file.writerow(['test11', 'test12'])
-    #     self.csv_file.writerow(['test13', 'test14'])
-    #     self.assertTrue(os.path.exists('testdir/data_160706_01.csv'))
+    def test_append_row(self):
+        u"""追記用にファイルをオープンして書き込むテスト
+        """
+        self.csv_file.writerow(['test7', 'test8'])
+        self.csv_file.writerow(['test9', 'test10'])
+        self.csv_file.writerow(['test11', 'test12'])
+        self.csv_file.writerow(['test13', 'test14'])
+        self.assertTrue(os.path.exists('testdir/data_160711_02.csv'))
 
     def test_write_30000(self):
         u"""追記用にファイルをオープンして書き込むテスト
@@ -280,7 +275,7 @@ class FactorialTest(unittest.TestCase):
         # for i in range(19999):
         for i in range(50000):
             self.csv_file.writerow([i])
-        self.assertTrue(os.path.exists('testdir/data_160709_01.csv'))
+        self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
 
     # def test_encoding(self):
     #     u"""ファイルのmodeをテスト
@@ -293,12 +288,6 @@ class FactorialTest(unittest.TestCase):
     #     """
     #     self.csv_file = self.csv_file.open_append_mode()
     #     self.assertEqual(self.csv_file.mode, 'a+')
-
-    # def test_write_mode(self):
-    #     u"""ファイルのmodeをテスト
-    #     """
-    #     self.csv_file = self.csv_file.open_write_mode()
-    #     self.assertEqual(self.csv_file.mode, 'w+')
 
     # def test_read(self):
     #     u"""ファイルの内容を読み込む
