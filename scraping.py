@@ -64,15 +64,19 @@ class Scraping():
             except URLError as error_code:
                 logmessage.logprint('ドライバーの取得に失敗しました。')
                 logmessage.logprint(error_code)
+                return None
             except WebDriverException as error_code:
                 logmessage.logprint('PhantomJSのサービスとの接続に失敗しました。')
-                logmessage.logprint(error_code)
+                logmessage.logprint('libディレクトリにPhantomJSの実行ファイルが必要です。')
+                # logmessage.logprint(error_code)
+                return None
 
             return driver
 
         self.driver = get_phantom_driver()
-        self.category_driver = get_phantom_driver()
-        self.product_page_driver = get_phantom_driver()
+        if self.driver is not None:
+            self.category_driver = get_phantom_driver()
+            self.product_page_driver = get_phantom_driver()
 
     @staticmethod
     def get_phantom_page(url, driver):
@@ -670,6 +674,11 @@ class Scraping():
     def get_product_info(self, url, path=''):
         u"""商品個別のurlを受け取り、商品情報をリストにして返す
         """
+        print(self)
+        if self.driver is None:
+            logmessage.logprint('driverの取得に失敗しています。')
+            return None
+
         not_find = textfile.TextFile('result', 'not_find_product.txt')
         not_find_file = not_find.open_append_mode()
 
@@ -872,7 +881,10 @@ class FactorialTest(unittest.TestCase):
         url = 'http://store.shopping.yahoo.co.jp/drmart-1/cm-234176.html'
         product_list = self.scraping.get_product_info(url)
 
-        self.assertEqual(len(product_list), 544)
+        if product_list is None:
+            self.assertEqual(product_list, None)
+        else:
+            self.assertEqual(len(product_list), 544)
 
     def test_get_product_info_cm(self):
         u"""商品情報を取得するテスト
@@ -880,7 +892,10 @@ class FactorialTest(unittest.TestCase):
         url = 'http://store.shopping.yahoo.co.jp/drmart-1/cm-218372.html'
         product_list = self.scraping.get_product_info(url)
 
-        self.assertEqual(len(product_list), 544)
+        if product_list is None:
+            self.assertEqual(product_list, None)
+        else:
+            self.assertEqual(len(product_list), 544)
 
     def tearDown(self):
         u"""クローズ処理など
