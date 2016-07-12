@@ -12,8 +12,8 @@ import logmessage
 class Csvfile():
     u"""Csvfileクラス
     """
-    def __init__(self, directory):
-        self.csv_file_serial_number = 0
+    def __init__(self, directory, header_list):
+        self.csv_file_serial_number = 1
         self.row_serial_number = 0
         self.csv_file = None
         self.directory = directory
@@ -25,49 +25,10 @@ class Csvfile():
 
         self.file_path = None
 
-        self.header_list = [
-            'name', 'jan', 'abstract', 'price', 'explanation',
-            'code', 'caption', 'image1', 'image2', 'image3',
-            'image4', 'image5', 'Gimage1', 'path']
+        self.header_list = header_list
 
-        self.header_name_40 = ['color-']
-
-        self.header_name_30 = [
-            'model-number-',
-            'size-',
-            'fragrance-',
-            'type-'
-            ]
-
-        self.header_name_10 = [
-            'seat-color-', 'seat-width-', 'seat-type-',
-            'seat-height-', 'seat-color-type-', 'sitting-height-',
-            'sitting-width-', 'pattern-', 'frame-color-',
-            'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
-            'size-color-', 'firmness-', 'type-color-',
-            'arm-support-', 'mount-position-', 'color2-',
-            'color-type-', 'choice2-', 'taste-',
-            'size-cm-', 'top-board-color-', 'lever-position-',
-            'cloth-color-', 'thickness-', 'tire-size-',
-            'cover-color-', 'cover-type-', 'caster-size-',
-            'bag-color-', 'tipping-pipe-', 'wood-color-',
-            'operating-side-', 'back-support-color-', 'body-color-',
-            '']
-
-        # 既存ファイルの読み込む
+        # 既存ファイルの読み込み
         self.open_read_mode()
-
-        header_list_half = []
-        for name in self.header_name_40:
-            header_list_half.extend(self.make_header_name(name, 40))
-
-        for name in self.header_name_30:
-            header_list_half.extend(self.make_header_name(name, 30))
-
-        for name in self.header_name_10:
-            header_list_half.extend(self.make_header_name(name, 10))
-
-        self.header_list.extend(header_list_half)
 
     @staticmethod
     def get_yymmdd():
@@ -108,7 +69,6 @@ class Csvfile():
         serial_number = str(self.csv_file_serial_number)
         if len(serial_number) == 1:
             serial_number = '0' + serial_number
-        # print(serial_number)
         file_name = file_name + serial_number
 
         return file_name
@@ -116,7 +76,7 @@ class Csvfile():
     def open_read_mode(self):
         u"""読み込みモードでオープンしてself.row_serial_numberに
         行数を設定して返す。
-        * dirctoryが存在しない場合はself.directoryで作成する。
+        * dirctoryが存在しない場合はself.directoryを作成する。
         * directoryにファイルがない場合は何もしない
         * directoryにファイルが１つ以上ある場合は一覧を取得して
           レコード数を求める。
@@ -131,10 +91,11 @@ class Csvfile():
         files = [f for f in os.listdir('.')]
         if len(files) is 0:
             os.chdir(backup_cwd)
-            self.csv_file_serial_number = 1
+            # self.csv_file_serial_number = 1
             return
         else:
-            files.sort(key=os.path.getmtime)
+            # files.sort(key=os.path.getmtime)
+            files.sort()
         os.chdir(backup_cwd)
 
         for file_name in files:
@@ -143,73 +104,92 @@ class Csvfile():
                 self.part_file_name = file_name.split('.')[0].split('_')[1]
                 file_path = os.path.join(self.directory, file_name)
 
-                with open(file_path, 'r', encoding='utf-8') as file_contents:
-                    reader = csv.reader(file_contents)
-                    # print(reader.line_num)
-                    # 中身が何もなかったら何もしない。
-                    if reader.line_num != 0:
-                        # ヘッダーを読み飛ばす
-                        header = next(reader)
-                        print(header)
-                        i = 0
-                        for row in reader:
-                            i += 1
-                        self.row_serial_number += i
+                # 行数を取得する。
+                try:
+                    file_handler = open(file_path)
+                except Exception:
+                    logmessage.logprint('CSVファイルのオープンでエラーが発生しました。')
+                line_num = len(file_handler.readlines())
 
-                self.csv_file_serial_number += 1
+                if line_num == 0:
+                    pass
+                elif line_num == 1:
+                    pass
+                else:
+                    self.row_serial_number += (line_num - 1)
+
+                self.csv_file_serial_number = int(
+                    file_name.split('.')[0].split('_')[2])
+                print(self.csv_file_serial_number)
+
+                file_handler.close()
 
         return self.row_serial_number
 
     def open_append_mode(self):
         u"""追記モードでオープンしてfile objectを返す
-        既にファイルがある場合は削除される。
         """
         self.file_name = self.make_csv_file_name()
         self.file_path = os.path.join(
             self.directory, self.file_name + '.csv')
 
-        self.csv_file = open(
-            self.file_path,
-            newline='',
-            mode='a+',
-            encoding='utf-8')
+        try:
+            self.csv_file = open(
+                self.file_path,
+                newline='',
+                mode='a+',
+                encoding='utf-8')
+        except Exception:
+            logmessage.logprint('CSVファイルのオープンでエラーが発生しました。')
 
         return self.csv_file
-
-    @staticmethod
-    def make_header_name(name, number):
-        u"""リストnameを受け取り要素数numberのリストを返す
-        iが10の場合はlist1からlist10までを返す
-        """
-        name_list = []
-        for i in range(0, number):
-            name_list.append(name + 'list' + str(i + 1))
-
-        return name_list
 
     def writerow(self, row_list):
         u"""row_listを受け取りcsvファイルに保存する。
         """
         # 10個のレコードを保存するたびにログを表示する。
-        if self.row_serial_number % 10 == 0:
-            if self.row_serial_number != 0:
-                logmessage.logprint(
-                    str(self.row_serial_number) + '個のレコードを保存しました。')
+        # if self.row_serial_number % 10 == 0:
+        #     # 初回はパスする。
+        #     if self.row_serial_number != 0:
+        #         logmessage.logprint(
+        #             str(self.row_serial_number) + '個のレコードを保存しました。')
 
         if self.row_serial_number % 19999 == 0:
+            # 19,999行、39,998行...書き込んだ時の処理
             # 通し番号をインクリメント
-            self.csv_file_serial_number += 1
+            if self.row_serial_number is not 0:
+                self.csv_file_serial_number += 1
 
-            self.csv_file = self.open_append_mode()
-            writer = csv.writer(self.csv_file, lineterminator='\n')
-            writer.writerow(self.header_list)
-
+        # ファイルがNoneかどうか判定してオープンする。
         if self.csv_file is None:
+            print('None')
             self.csv_file = self.open_append_mode()
+
+        # ファイルがオープンしてるかどうか判定してオープンする。
+        if self.csv_file.closed is True:
+            self.csv_file = self.open_append_mode()
+
+        writer = csv.writer(self.csv_file, lineterminator='\n')
+
+        if self.row_serial_number == 0:
+            # 初回の処理
+            try:
+                writer.writerow(self.header_list)
+            except csv.Error:
+                logmessage.logprint('CSVファイルへの書き込みに失敗しました。')
+
+        elif self.row_serial_number % 19999 == 0:
+            # 19,999行、39,998行...書き込んだ時のヘッダの書き込み処理
+            try:
+                writer.writerow(self.header_list)
+            except csv.Error:
+                logmessage.logprint('CSVファイルへの書き込みに失敗しました。')
+
+        else:
+            pass
 
         # CSVファイルへの書き込み
         try:
-            writer = csv.writer(self.csv_file, lineterminator='\n')
             writer.writerow(row_list)
         except csv.Error:
             logmessage.logprint('CSVファイルへの書き込みに失敗しました。')
@@ -242,40 +222,97 @@ class FactorialTest(unittest.TestCase):
     def setUp(self):
         u"""セットアップ
         """
-        self.csv_file = Csvfile('./testdir/')
+        header_list = [
+            'name', 'jan', 'abstract', 'price', 'explanation',
+            'code', 'caption', 'image1', 'image2', 'image3',
+            'image4', 'image5', 'Gimage1', 'path']
+
+        header_name_40 = ['color-']
+
+        header_name_30 = [
+            'model-number-',
+            'size-',
+            'fragrance-',
+            'type-'
+            ]
+
+        header_name_10 = [
+            'seat-color-', 'seat-width-', 'seat-type-',
+            'seat-height-', 'seat-color-type-', 'sitting-height-',
+            'sitting-width-', 'pattern-', 'frame-color-',
+            'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
+            'size-color-', 'firmness-', 'type-color-',
+            'arm-support-', 'mount-position-', 'color2-',
+            'color-type-', 'choice2-', 'taste-',
+            'size-cm-', 'top-board-color-', 'lever-position-',
+            'cloth-color-', 'thickness-', 'tire-size-',
+            'cover-color-', 'cover-type-', 'caster-size-',
+            'bag-color-', 'tipping-pipe-', 'wood-color-',
+            'operating-side-', 'back-support-color-', 'body-color-',
+            '']
+
+        header_list_half = []
+        for name in header_name_40:
+            header_list_half.extend(self.make_header_name(name, 40))
+
+        for name in header_name_30:
+            header_list_half.extend(self.make_header_name(name, 30))
+
+        for name in header_name_10:
+            header_list_half.extend(self.make_header_name(name, 10))
+
+        header_list.extend(header_list_half)
+
+        self.csv_file = Csvfile('./testdir/', header_list)
+
+    @staticmethod
+    def make_header_name(name, number):
+        u"""リストnameを受け取り要素数numberのリストを返す
+        iが10の場合はlist1からlist10までを返す
+        """
+        name_list = []
+        for i in range(0, number):
+            name_list.append(name + 'list' + str(i + 1))
+
+        return name_list
 
     def test_open_append_mode(self):
-        u"""追記用にファイルをオープンするテスト
-        """
-        csv_file = self.csv_file.open_append_mode()
-        writer = csv.writer(csv_file, lineterminator='\n')
-        writer.writerow(['test1', 'test2'])
-        self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
-
-    def test_write_row(self):
-        u"""ファイルに書き込むテスト
+        u"""追記用にファイルをオープンして書き込むテスト
         """
         self.csv_file.writerow(['test1', 'test2'])
         self.csv_file.writerow(['test3', 'test4'])
-        self.csv_file.writerow(['test5', 'test6'])
-        self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
 
-    def test_append_row(self):
-        u"""追記用にファイルをオープンして書き込むテスト
-        """
-        self.csv_file.writerow(['test7', 'test8'])
-        self.csv_file.writerow(['test9', 'test10'])
-        self.csv_file.writerow(['test11', 'test12'])
-        self.csv_file.writerow(['test13', 'test14'])
-        self.assertTrue(os.path.exists('testdir/data_160711_02.csv'))
+        csv_file_name = self.csv_file.make_csv_file_name() + '.csv'
+        self.assertTrue(os.path.exists(
+            'testdir/' + csv_file_name))
+
+    # def test_write_row(self):
+    #     u"""ファイルに書き込むテスト
+    #     """
+    #     self.csv_file.writerow(['test1', 'test2'])
+    #     self.csv_file.writerow(['test3', 'test4'])
+    #     self.csv_file.writerow(['test5', 'test6'])
+    #     self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
+
+    # def test_append_row(self):
+    #     u"""追記用にファイルをオープンして書き込むテスト
+    #     """
+    #     self.csv_file.writerow(['test7', 'test8'])
+    #     self.csv_file.writerow(['test9', 'test10'])
+    #     self.csv_file.writerow(['test11', 'test12'])
+    #     self.csv_file.writerow(['test13', 'test14'])
+    #     self.assertTrue(os.path.exists('testdir/data_160711_02.csv'))
 
     def test_write_30000(self):
         u"""追記用にファイルをオープンして書き込むテスト
         """
-        # for i in range(19999):
-        for i in range(50000):
+        for i in range(10000):
             self.csv_file.writerow([i])
-        self.assertTrue(os.path.exists('testdir/data_160711_01.csv'))
+
+        csv_file_name = self.csv_file.make_csv_file_name() + '.csv'
+
+        self.assertTrue(os.path.exists(
+            'testdir/' + csv_file_name))
 
     # def test_encoding(self):
     #     u"""ファイルのmodeをテスト
