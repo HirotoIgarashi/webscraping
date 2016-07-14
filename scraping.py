@@ -26,6 +26,17 @@ import csvfile
 import textfile
 
 
+def make_header_name(name, number):
+    u"""リストnameを受け取り要素数numberのリストを返す
+    iが10の場合はlist1からlist10までを返す
+    """
+    name_list = []
+    for i in range(0, number):
+        name_list.append(name + 'list' + str(i + 1))
+
+    return name_list
+
+
 class Scraping():
     u"""Scrapingクラス
     """
@@ -42,7 +53,8 @@ class Scraping():
         self.base_url = base_url
 
         # Csvfileクラス
-        self.csv_file = csvfile.Csvfile('./drmart-1/')
+        header_list = self.make_header_list()
+        self.csv_file = csvfile.Csvfile('./drmart-1/', header_list)
 
         for key, value in enumerate(headers):
             (webdriver
@@ -76,6 +88,53 @@ class Scraping():
         if self.driver is not None:
             self.category_driver = get_phantom_driver()
             self.product_page_driver = get_phantom_driver()
+
+    @staticmethod
+    def make_header_list():
+        u"""csvファイル用のヘッダーを作成する。
+        """
+        header_list = [
+            'name', 'jan', 'abstract', 'price', 'explanation',
+            'code', 'caption', 'image1', 'image2', 'image3',
+            'image4', 'image5', 'Gimage1', 'path']
+
+        header_name_40 = ['color-']
+
+        header_name_30 = [
+            'model-number-',
+            'size-',
+            'fragrance-',
+            'type-'
+            ]
+
+        header_name_10 = [
+            'seat-color-', 'seat-width-', 'seat-type-',
+            'seat-height-', 'seat-color-type-', 'sitting-height-',
+            'sitting-width-', 'pattern-', 'frame-color-',
+            'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
+            'size-color-', 'firmness-', 'type-color-',
+            'arm-support-', 'mount-position-', 'color2-',
+            'color-type-', 'choice2-', 'taste-',
+            'size-cm-', 'top-board-color-', 'lever-position-',
+            'cloth-color-', 'thickness-', 'tire-size-',
+            'cover-color-', 'cover-type-', 'caster-size-',
+            'bag-color-', 'tipping-pipe-', 'wood-color-',
+            'operating-side-', 'back-support-color-', 'body-color-',
+            '']
+
+        header_list_half = []
+        for name in header_name_40:
+            header_list_half.extend(make_header_name(name, 40))
+
+        for name in header_name_30:
+            header_list_half.extend(make_header_name(name, 30))
+
+        for name in header_name_10:
+            header_list_half.extend(make_header_name(name, 10))
+
+        header_list.extend(header_list_half)
+
+        return header_list
 
     @staticmethod
     def get_phantom_page(url, driver):

@@ -34,6 +34,64 @@ def make_url_list():
     return return_list
 
 
+def make_header_name(name, number):
+    u"""リストnameを受け取り要素数numberのリストを返す
+    iが10の場合はlist1からlist10までを返す
+    """
+    name_list = []
+    for i in range(0, number):
+        name_list.append(name + 'list' + str(i + 1))
+
+    return name_list
+
+
+def make_header_list():
+    u"""csvファイル用のヘッダーを作成する。
+    """
+    header_list = [
+        'name', 'jan', 'abstract', 'price', 'explanation',
+        'code', 'caption', 'image1', 'image2', 'image3',
+        'image4', 'image5', 'Gimage1', 'path']
+
+    header_name_40 = ['color-']
+
+    header_name_30 = [
+        'model-number-',
+        'size-',
+        'fragrance-',
+        'type-'
+        ]
+
+    header_name_10 = [
+        'seat-color-', 'seat-width-', 'seat-type-',
+        'seat-height-', 'seat-color-type-', 'sitting-height-',
+        'sitting-width-', 'pattern-', 'frame-color-',
+        'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
+        'size-color-', 'firmness-', 'type-color-',
+        'arm-support-', 'mount-position-', 'color2-',
+        'color-type-', 'choice2-', 'taste-',
+        'size-cm-', 'top-board-color-', 'lever-position-',
+        'cloth-color-', 'thickness-', 'tire-size-',
+        'cover-color-', 'cover-type-', 'caster-size-',
+        'bag-color-', 'tipping-pipe-', 'wood-color-',
+        'operating-side-', 'back-support-color-', 'body-color-',
+        '']
+
+    header_list_half = []
+    for name in header_name_40:
+        header_list_half.extend(make_header_name(name, 40))
+
+    for name in header_name_30:
+        header_list_half.extend(make_header_name(name, 30))
+
+    for name in header_name_10:
+        header_list_half.extend(make_header_name(name, 10))
+
+    header_list.extend(header_list_half)
+
+    return HEADER_LIST
+
+
 if __name__ == '__main__':
     # baseURL               BASE_URL
     # スタートURL           BASE_URL + 'drmart/'
@@ -47,8 +105,8 @@ if __name__ == '__main__':
     TEXTFILE = textfile.TextFile('result', 'top_category.txt')
     COMPLETE = textfile.TextFile('result', 'complete_product.txt')
     NOT_FIND = textfile.TextFile('result', 'not_find_product.txt')
-    # NOT_FIND = textfile.TextFile('result', 'notfind_product.txt')
-    CSVFILE = csvfile.Csvfile('./drmart-1/')
+    HEADER_LIST = make_header_list()
+    CSVFILE = csvfile.Csvfile('./drmart-1/', HEADER_LIST)
     COMPLETE_PRODUCT = ''
     NOT_FIND_PRODUCT = ''
 
@@ -69,12 +127,12 @@ if __name__ == '__main__':
 
     # テスト用
     URL_LIST = [
-        # 'http://store.shopping.yahoo.co.jp/drmart-1/cm-234176.html',
-        # 'http://store.shopping.yahoo.co.jp/drmart-1/cm-234177.html',
-        # 'http://store.shopping.yahoo.co.jp/drmart-1/cm-257405.html',
-        # 'http://store.shopping.yahoo.co.jp/drmart-1/cm-257486.html',
-        # 'http://store.shopping.yahoo.co.jp/drmart-1/cm-257404.html',
-        # 'http://store.shopping.yahoo.co.jp/drmart-1/cm-252447.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234176.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234177.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-257405.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-257486.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-257404.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-252447.html',
         'http://store.shopping.yahoo.co.jp/drmart-1/cm-218372.html',
         'http://store.shopping.yahoo.co.jp/drmart-1/cm-216054.html'
     ]
@@ -94,51 +152,49 @@ if __name__ == '__main__':
 
     COMPLETE_FILE.close()
 
-    """
-    # トップカテゴリを取得してTOP_LINKSに格納する。
-    if os.path.isfile('result/top_category.txt'):
-        # ファイルからトップカテゴリを読み込みTOP_LINKSにaddする
-        logmessage.logprint('トップカテゴリをファイルから読み込みます。')
-        TOP_CATEGORY_FILE = TEXTFILE.open_read_mode()
-        for line in TOP_CATEGORY_FILE:
-            if not line.startswith('#'):
-                if line != '\n':
-                    # TOP_LINKS.add(line.strip())
-                    TOP_LINKS.append(line.strip())
-        TEXTFILE.close()
+    # # トップカテゴリを取得してTOP_LINKSに格納する。
+    # if os.path.isfile('result/top_category.txt'):
+    #     # ファイルからトップカテゴリを読み込みTOP_LINKSにaddする
+    #     logmessage.logprint('トップカテゴリをファイルから読み込みます。')
+    #     TOP_CATEGORY_FILE = TEXTFILE.open_read_mode()
+    #     for line in TOP_CATEGORY_FILE:
+    #         if not line.startswith('#'):
+    #             if line != '\n':
+    #                 # TOP_LINKS.add(line.strip())
+    #                 TOP_LINKS.append(line.strip())
+    #     TEXTFILE.close()
 
-    else:
-        logmessage.logprint('カテゴリ(トップ)の走査を開始します。')
+    # else:
+    #     logmessage.logprint('カテゴリ(トップ)の走査を開始します。')
 
-        TOP_CATEGORY_FILE = TEXTFILE.open_write_mode()
+    #     TOP_CATEGORY_FILE = TEXTFILE.open_write_mode()
 
-        # リンクをゲットする。
-        TOP_LINKS = SCRAPING.get_links(
-            [START_URL],
-            LINK_PATTERN
-            )
+    #     # リンクをゲットする。
+    #     TOP_LINKS = SCRAPING.get_links(
+    #         [START_URL],
+    #         LINK_PATTERN
+    #         )
 
-        # トップカテゴリをファイルに保存する。
-        print(len(TOP_LINKS))
-        for category in TOP_LINKS:
-            TOP_CATEGORY_FILE.write(category + '\n')
-            TOP_CATEGORY_FILE.flush()
+    #     # トップカテゴリをファイルに保存する。
+    #     print(len(TOP_LINKS))
+    #     for category in TOP_LINKS:
+    #         TOP_CATEGORY_FILE.write(category + '\n')
+    #         TOP_CATEGORY_FILE.flush()
 
-        TEXTFILE.close()
+    #     TEXTFILE.close()
 
-    logmessage.logprint(str(len(TOP_LINKS)) + '個のカテゴリが見つかりました')
+    # logmessage.logprint(str(len(TOP_LINKS)) + '個のカテゴリが見つかりました')
 
-    logmessage.logprint('カテゴリの走査を開始します。')
+    # logmessage.logprint('カテゴリの走査を開始します。')
 
-    # ラストカテゴリを渡して
-    # 商品情報とイメージファイルを保存する。
-    for link in TOP_LINKS:
-        # last_links = SCRAPING.get_last_links(
-        products = SCRAPING.find_item_list(
-            link,
-            PRODUCT_PATTERN
-            )
-    """
+    # # ラストカテゴリを渡して
+    # # 商品情報とイメージファイルを保存する。
+    # for link in TOP_LINKS:
+    #     # last_links = SCRAPING.get_last_links(
+    #     products = SCRAPING.find_item_list(
+    #         link,
+    #         PRODUCT_PATTERN
+    #         )
 
     logmessage.logprint(
         str(imagefile.get_image_count()) + '個のイメージファイルを保存しました。')
