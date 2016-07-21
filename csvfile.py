@@ -6,22 +6,24 @@ import unittest
 from datetime import datetime
 import csv
 # My library
-import logmessage
+from logmessage import logprint
 
 
 class Csvfile():
     u"""Csvfileクラス
     """
     def __init__(self, directory, header_list):
-        self.csv_file_serial_number = 1
+        # csvファイルに書き込んだヘッダを除くレコード数
         self.row_serial_number = 0
+        # 今オープンしているcsvファイル
         self.csv_file = None
         self.directory = directory
         self.file_name = ''
 
-        yymmdd_string = self.get_yymmdd()
-
-        self.part_file_name = yymmdd_string
+        # csvファイル名のdata_160712_01.csvの160712部分
+        self.part_file_name = self.get_yymmdd()
+        # csvファイル名のdata_160712_01.csvの01部分
+        self.csv_file_serial_number = 1
 
         self.file_path = None
 
@@ -107,8 +109,8 @@ class Csvfile():
                 # 行数を取得する。
                 try:
                     file_handler = open(file_path)
-                except Exception:
-                    logmessage.logprint('CSVファイルのオープンでエラーが発生しました。')
+                except IOError:
+                    logprint('CSVファイルのオープンでエラーが発生しました。')
                 line_num = len(file_handler.readlines())
 
                 if line_num == 0:
@@ -120,7 +122,6 @@ class Csvfile():
 
                 self.csv_file_serial_number = int(
                     file_name.split('.')[0].split('_')[2])
-                print(self.csv_file_serial_number)
 
                 file_handler.close()
 
@@ -139,8 +140,8 @@ class Csvfile():
                 newline='',
                 mode='a+',
                 encoding='utf-8')
-        except Exception:
-            logmessage.logprint('CSVファイルのオープンでエラーが発生しました。')
+        except IOError:
+            logprint('CSVファイルのオープンでエラーが発生しました。')
 
         return self.csv_file
 
@@ -151,7 +152,7 @@ class Csvfile():
         # if self.row_serial_number % 10 == 0:
         #     # 初回はパスする。
         #     if self.row_serial_number != 0:
-        #         logmessage.logprint(
+        #         logprint(
         #             str(self.row_serial_number) + '個のレコードを保存しました。')
 
         if self.row_serial_number % 19999 == 0:
@@ -162,7 +163,6 @@ class Csvfile():
 
         # ファイルがNoneかどうか判定してオープンする。
         if self.csv_file is None:
-            print('None')
             self.csv_file = self.open_append_mode()
 
         # ファイルがオープンしてるかどうか判定してオープンする。
@@ -176,14 +176,14 @@ class Csvfile():
             try:
                 writer.writerow(self.header_list)
             except csv.Error:
-                logmessage.logprint('CSVファイルへの書き込みに失敗しました。')
+                logprint('CSVファイルへの書き込みに失敗しました。')
 
         elif self.row_serial_number % 19999 == 0:
             # 19,999行、39,998行...書き込んだ時のヘッダの書き込み処理
             try:
                 writer.writerow(self.header_list)
             except csv.Error:
-                logmessage.logprint('CSVファイルへの書き込みに失敗しました。')
+                logprint('CSVファイルへの書き込みに失敗しました。')
 
         else:
             pass
@@ -192,7 +192,7 @@ class Csvfile():
         try:
             writer.writerow(row_list)
         except csv.Error:
-            logmessage.logprint('CSVファイルへの書き込みに失敗しました。')
+            logprint('CSVファイルへの書き込みに失敗しました。')
         else:
             self.row_serial_number += 1
 

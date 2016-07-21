@@ -27,7 +27,8 @@ def make_url_list():
     作成してリストで返す。
     """
     return_list = []
-    for i in range(200000, 400000):
+    # for i in range(200000, 400000):
+    for i in range(200000, 200200):
         return_list.append(
             BASE_URL + 'drmart-1/cm-' + str(i) + '.html')
 
@@ -45,7 +46,7 @@ def make_header_name(name, number):
     return name_list
 
 
-def make_header_list():
+def make_header_list_old():
     u"""csvファイル用のヘッダーを作成する。
     """
     header_list = [
@@ -89,7 +90,31 @@ def make_header_list():
 
     header_list.extend(header_list_half)
 
-    return HEADER_LIST
+    return header_list
+
+
+def make_header_list():
+    u"""csvファイル用のヘッダーを作成する。
+    """
+    header_list = [
+        'name', 'jan', 'abstract', 'price', 'explanation',
+        'code', 'caption', 'image1', 'image2', 'image3',
+        'image4', 'image5', 'Gimage1', 'path']
+
+    header_name_40 = [
+        'color-',
+        'type-',
+        'size-',
+        'other-'
+    ]
+
+    header_list_half = []
+    for name in header_name_40:
+        header_list_half.extend(make_header_name(name, 40))
+
+    header_list.extend(header_list_half)
+
+    return header_list
 
 
 if __name__ == '__main__':
@@ -127,14 +152,29 @@ if __name__ == '__main__':
 
     # テスト用
     URL_LIST = [
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234176.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234177.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-257405.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-257486.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-257404.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-252447.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-218372.html',
-        'http://store.shopping.yahoo.co.jp/drmart-1/cm-216054.html'
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-208104.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234000.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234010.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234121.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-234231.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-242626.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-242921.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-243422.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-246713.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-246745.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-248654.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-250757.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-261416.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-264849.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-265353.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-267127.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-267216.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-268616.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-271327.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-273849.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-277808.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-278286.html',
+        'http://store.shopping.yahoo.co.jp/drmart-1/cm-278378.html'
     ]
     # 処理済みのファイルに書き込む
     COMPLETE_FILE = COMPLETE.open_append_mode()

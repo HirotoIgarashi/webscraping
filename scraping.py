@@ -21,7 +21,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # My library
 import imagefile
-import logmessage
+from logmessage import logprint
 import csvfile
 import textfile
 
@@ -35,6 +35,80 @@ def make_header_name(name, number):
         name_list.append(name + 'list' + str(i + 1))
 
     return name_list
+
+
+def write_not_find_page_url(url):
+    u"""見つからなかったページのurlを書き込む
+    """
+    not_find = textfile.TextFile('result', 'not_find_product.txt')
+    not_find_file = not_find.open_append_mode()
+    not_find_file.write(url + '\n')
+    not_find_file.close()
+
+
+def make_header_list():
+    u"""csvファイル用のヘッダーを作成する。
+    """
+    header_list = [
+        'name', 'jan', 'abstract', 'price', 'explanation',
+        'code', 'caption', 'image1', 'image2', 'image3',
+        'image4', 'image5', 'Gimage1', 'path']
+
+    header_name_40 = ['color-']
+
+    header_name_30 = [
+        'model-number-',
+        'size-',
+        'fragrance-',
+        'type-'
+        ]
+
+    header_name_10 = [
+        'seat-color-', 'seat-width-', 'seat-type-',
+        'seat-height-', 'seat-color-type-', 'sitting-height-',
+        'sitting-width-', 'pattern-', 'frame-color-',
+        'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
+        'size-color-', 'firmness-', 'type-color-',
+        'arm-support-', 'mount-position-', 'color2-',
+        'color-type-', 'choice2-', 'taste-',
+        'size-cm-', 'top-board-color-', 'lever-position-',
+        'cloth-color-', 'thickness-', 'tire-size-',
+        'cover-color-', 'cover-type-', 'caster-size-',
+        'bag-color-', 'tipping-pipe-', 'wood-color-',
+        'operating-side-', 'back-support-color-', 'body-color-',
+        '']
+
+    header_list_half = []
+    for name in header_name_40:
+        header_list_half.extend(make_header_name(name, 40))
+
+    for name in header_name_30:
+        header_list_half.extend(make_header_name(name, 30))
+
+    for name in header_name_10:
+        header_list_half.extend(make_header_name(name, 10))
+
+    header_list.extend(header_list_half)
+
+    return header_list
+
+
+def get_only_number(data):
+    u"""
+    * データから数値のみを抜き出す。(1,280件) -> ['1','280']
+    * 結果のリストをつなげる。['1','280'] -> 1280
+    * intに変換する。
+    戻り値 : int
+    """
+    # 数字のみを抜き出す。(1,280件) -> ['1','280']
+    match_list = re.findall(r"\d+", data)
+    str_data = ''
+    int_data = 0
+    for count in match_list:
+        str_data += str(count)
+    int_data = int(str_data)
+
+    return int_data
 
 
 class Scraping():
@@ -53,7 +127,7 @@ class Scraping():
         self.base_url = base_url
 
         # Csvfileクラス
-        header_list = self.make_header_list()
+        header_list = make_header_list()
         self.csv_file = csvfile.Csvfile('./drmart-1/', header_list)
 
         for key, value in enumerate(headers):
@@ -72,14 +146,14 @@ class Scraping():
                     driver = webdriver.PhantomJS(
                         executable_path='lib/phantomjs.exe')
                 else:
-                    logmessage.logprint('Unsupported OS')
+                    logprint('Unsupported OS')
             except URLError as error_code:
-                logmessage.logprint('ドライバーの取得に失敗しました。')
-                logmessage.logprint(error_code)
+                logprint('ドライバーの取得に失敗しました。')
+                logprint(error_code)
                 return None
             except WebDriverException as error_code:
-                logmessage.logprint('PhantomJSのサービスとの接続に失敗しました。')
-                logmessage.logprint('libディレクトリにPhantomJSの実行ファイルが必要です。')
+                logprint('PhantomJSのサービスとの接続に失敗しました。')
+                logprint('libディレクトリにPhantomJSの実行ファイルが必要です。')
                 return None
 
             return driver
@@ -90,77 +164,30 @@ class Scraping():
             self.product_page_driver = get_phantom_driver()
 
     @staticmethod
-    def make_header_list():
-        u"""csvファイル用のヘッダーを作成する。
-        """
-        header_list = [
-            'name', 'jan', 'abstract', 'price', 'explanation',
-            'code', 'caption', 'image1', 'image2', 'image3',
-            'image4', 'image5', 'Gimage1', 'path']
-
-        header_name_40 = ['color-']
-
-        header_name_30 = [
-            'model-number-',
-            'size-',
-            'fragrance-',
-            'type-'
-            ]
-
-        header_name_10 = [
-            'seat-color-', 'seat-width-', 'seat-type-',
-            'seat-height-', 'seat-color-type-', 'sitting-height-',
-            'sitting-width-', 'pattern-', 'frame-color-',
-            'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
-            'size-color-', 'firmness-', 'type-color-',
-            'arm-support-', 'mount-position-', 'color2-',
-            'color-type-', 'choice2-', 'taste-',
-            'size-cm-', 'top-board-color-', 'lever-position-',
-            'cloth-color-', 'thickness-', 'tire-size-',
-            'cover-color-', 'cover-type-', 'caster-size-',
-            'bag-color-', 'tipping-pipe-', 'wood-color-',
-            'operating-side-', 'back-support-color-', 'body-color-',
-            '']
-
-        header_list_half = []
-        for name in header_name_40:
-            header_list_half.extend(make_header_name(name, 40))
-
-        for name in header_name_30:
-            header_list_half.extend(make_header_name(name, 30))
-
-        for name in header_name_10:
-            header_list_half.extend(make_header_name(name, 10))
-
-        header_list.extend(header_list_half)
-
-        return header_list
-
-    @staticmethod
     def get_phantom_page(url, driver):
         u"""urlを受け取りページを取得する。
         """
 
         try:
             # 0.2秒から2秒の間でランダムにスリープする
-            # time.sleep(2/random.randint(1, 10))
+            time.sleep(2/random.randint(1, 10))
             old_page = driver.find_element_by_tag_name('html')
             driver.get(url)
         except HTTPError as error_code:
-            logmessage.logprint(url)
-            logmessage.logprint(error_code)
+            logprint(url)
+            logprint(error_code)
             return None
         except URLError as error_code:
-            logmessage.logprint("The server could not be found!")
-            logmessage.logprint(error_code)
+            logprint("The server could not be found!")
+            logprint(error_code)
             return None
         except RemoteDisconnected as error_code:
-            logmessage.logprint("Error! RemoteDisconnected")
-            logmessage.logprint(error_code)
+            logprint("Error! RemoteDisconnected")
+            logprint(error_code)
             return None
         except WebDriverException as error_code:
-            logmessage.logprint("Error! WebDriverException")
-            logmessage.logprint(error_code)
+            logprint("Error! WebDriverException")
+            logprint(error_code)
             return None
 
         try:
@@ -168,8 +195,8 @@ class Scraping():
                 EC.staleness_of(old_page)
                 )
         except TimeoutException as error_code:
-            logmessage.logprint("Error! TimeoutException")
-            logmessage.logprint(error_code)
+            logprint("Error! TimeoutException")
+            logprint(error_code)
             return None
 
         return driver
@@ -183,11 +210,11 @@ class Scraping():
             time.sleep(2/random.randint(1, 10))
             self.driver.get(url)
         except HTTPError as error_code:
-            logmessage.logprint(url)
-            logmessage.logprint(error_code)
+            logprint(url)
+            logprint(error_code)
         except URLError as error_code:
-            logmessage.logprint("The server could not be found!")
-            logmessage.logprint(error_code)
+            logprint("The server could not be found!")
+            logprint(error_code)
         else:
             page_source = self.driver.page_source
             bs_obj = BeautifulSoup(page_source, "lxml")
@@ -214,42 +241,24 @@ class Scraping():
             links = (self.product_page_driver.find_elements_by_xpath
                      ("//div[@class='mdItemList']/div/div/ul/li/dl/dd/a"))
         except StaleElementReferenceException as error_code:
-            logmessage.logprint('StaleElementReferenceException')
-            logmessage.logprint(error_code)
+            logprint('StaleElementReferenceException')
+            logprint(error_code)
         except WebDriverException as error_code:
-            logmessage.logprint('WebDriverException')
-            logmessage.logprint(error_code)
+            logprint('WebDriverException')
+            logprint(error_code)
         else:
             for link in links:
                 try:
                     new_page = link.get_attribute('href')
                 except StaleElementReferenceException as error_code:
-                    logmessage.logprint('StaleElementReferenceException')
-                    logmessage.logprint(error_code)
+                    logprint('StaleElementReferenceException')
+                    logprint(error_code)
                 else:
                     # 商品パターンの処理
                     if product_pattern.search(new_page):
                         link_list.append(new_page)
 
         return link_list
-
-    @staticmethod
-    def get_only_number(data):
-        u"""
-        * データから数値のみを抜き出す。(1,280件) -> ['1','280']
-        * 結果のリストをつなげる。['1','280'] -> 1280
-        * intに変換する。
-        戻り値 : int
-        """
-        # 数字のみを抜き出す。(1,280件) -> ['1','280']
-        match_list = re.findall(r"\d+", data)
-        str_data = ''
-        int_data = 0
-        for count in match_list:
-            str_data += str(count)
-        int_data = int(str_data)
-
-        return int_data
 
     def get_path_list(self, driver, xpath):
         u"""driverとxpathを受け取りpathを返す。
@@ -307,10 +316,10 @@ class Scraping():
             return link_list
 
         # 例えば1,230件のように','カンマが含まれる場合にも対応する。
-        int_data = self.get_only_number(product_count_text)
+        int_data = get_only_number(product_count_text)
 
-        logmessage.logprint(str(int_data) + '件が該当します。')
-        logmessage.logprint(str(int(int_data / 20 + 1)) + 'ページあります')
+        logprint(str(int_data) + '件が該当します。')
+        logprint(str(int(int_data / 20 + 1)) + 'ページあります')
 
         # path(カテゴリ)を取得
         bound_path = self.get_path_list(
@@ -334,7 +343,7 @@ class Scraping():
                         product_url, bound_path)
                     self.csv_file.writerow(product_list)
 
-            logmessage.logprint(str(i+1) + 'ページを処理しました。')
+            logprint(str(i+1) + 'ページを処理しました。')
 
             # 2秒から4秒の間でランダムにスリープする
             time.sleep(4/random.randint(1, 2))
@@ -353,20 +362,20 @@ class Scraping():
                 else:
                     break
             except NoSuchElementException as error_code:
-                logmessage.logprint('NoSuchElementException')
-                logmessage.logprint(error_code)
+                logprint('NoSuchElementException')
+                logprint(error_code)
                 break
             except StaleElementReferenceException as error_code:
-                logmessage.logprint('StaleElementReferenceException')
-                logmessage.logprint(error_code)
+                logprint('StaleElementReferenceException')
+                logprint(error_code)
                 break
             except TimeoutException as error_code:
-                logmessage.logprint('TimeoutException')
-                logmessage.logprint(error_code)
+                logprint('TimeoutException')
+                logprint(error_code)
                 break
             except WebDriverException as error_code:
-                logmessage.logprint('WebDriverException')
-                logmessage.logprint(error_code)
+                logprint('WebDriverException')
+                logprint(error_code)
                 break
 
             i += 1
@@ -387,13 +396,13 @@ class Scraping():
             　再帰
         """
 
-        logmessage.logprint(url + ' を処理します。')
+        logprint(url + ' を処理します。')
 
         # 引数のurlでページをget
         self.get_phantom_page(url, self.category_driver)
 
         if self.category_driver is None:
-            logmessage.logprint('ページの取得に失敗しました。')
+            logprint('ページの取得に失敗しました。')
             return None
 
         # カテゴリリストに含まれるリンクのリストを取得
@@ -413,7 +422,7 @@ class Scraping():
             self.get_phantom_page(category_url, self.category_driver)
 
             if self.category_driver is None:
-                logmessage.logprint('ページの取得に失敗しました。')
+                logprint('ページの取得に失敗しました。')
                 return None
 
             # カテゴリリストに含まれるリンクのリストを取得
@@ -429,7 +438,7 @@ class Scraping():
         # 商品リストの処理
         self.follow_item_list(url, product_pattern)
 
-        logmessage.logprint(str(len(self.product_page_list)) + '個の商品を処理しました。')
+        logprint(str(len(self.product_page_list)) + '個の商品を処理しました。')
 
         return
 
@@ -453,42 +462,18 @@ class Scraping():
         return absolute_url
 
     @staticmethod
-    def get_by_tag_name(phantom_page, tag_name):
-        u"""driverと検索するtagを受け取り結果を返す。
-        """
-        try:
-            data = phantom_page.find_element_by_tag_name(tag_name).text
-        except NoSuchElementException as error_code:
-            logmessage.logprint('NoSuchElementException')
-            logmessage.logprint(error_code)
-            return None
-        except WebDriverException as error_code:
-            logmessage.logprint('WebDriverException')
-            logmessage.logprint(error_code)
-            return None
-        else:
-            return data
-
-    @staticmethod
-    def get_by_class_name(phantom_page, class_name):
-        u"""driverと検索するclassの名前を受け取り結果を返す。
-        """
-        try:
-            data = phantom_page.find_element_by_class_name(class_name).text
-        except NoSuchElementException:
-            logmessage.logprint('NoSuchElementException')
-            return None
-        except WebDriverException:
-            logmessage.logprint('WebDriverException')
-            return None
-
-        return data
-
-    @staticmethod
     def get_text_by_xpath(phantom_page, xpath, error_message=''):
         u"""driverと検索するclassの名前を受け取り結果を返す。
+        目的:
+            * xpathに一致するテキストを返す
+            * 一致しなかったらエラーメッセージを出力する
+            * 一致しなかったら空文字列を返す。
+        引数:
+            * phantom_page: driver
+            * xpath: 検索するxpath
+            * error_message: 目的のデータがなかった時のエラーメッセージ
         戻り値 :
-            * data : 一致したデータ
+            * data : xpathに一致したテキスト
             * '' : データが一致しなかった時
         """
         try:
@@ -497,7 +482,7 @@ class Scraping():
             if error_message is '':
                 pass
             else:
-                logmessage.logprint(error_message)
+                logprint(error_message)
             return ''
         except WebDriverException:
             return ''
@@ -597,151 +582,103 @@ class Scraping():
         return return_list
 
     @staticmethod
-    def get_category_data(bs_obj):
-        u"""BeautifulSoup Objectを受け取りカテゴリデータを返す。
-        """
-        data_list = []
-
-        try:
-            for ul_tag in bs_obj.findAll(
-                    "nav", {"class": "breadcrumbs"})[0].findAll("ul"):
-                category_list = ul_tag.findAll("a", {"href": True})
-                contents = ''
-                for category in category_list:
-                    if category.get_text() == 'ホーム':
-                        pass
-                    else:
-                        if len(contents) == 0:
-                            contents = category.get_text()
-                        else:
-                            contents = contents + ';' + category.get_text()
-                data_list.append(contents)
-
-        except NoSuchElementException as error_code:
-            logmessage.logprint('NoSuchElementException')
-            logmessage.logprint(error_code)
-            return ''
-        except IndexError as error_code:
-            logmessage.logprint('IndexError')
-            logmessage.logprint(error_code)
-            return ''
-
-        category_data = ''
-
-        for data in data_list:
-            if len(category_data) == 0:
-                category_data = data
-            else:
-                category_data = category_data + '\n' + data
-
-        return category_data
-
-    @staticmethod
-    def get_description_list(desc_list):
-        u"""description 説明の処理
-        """
-        description_list = []
-
-        for item in desc_list:
-            desc = str(item.h2) + str(item.ul)
-
-            description_list.append(desc)
-
-        return description_list
-
-    @staticmethod
     def get_selection_list(data_list):
         u"""選択肢の処理
         """
-        return_list = [''] * (530)
+        return_list = [''] * (160)
 
-        count_dict = {
-            'カラー': 0,
-            '名称／型番': 40,
-            'サイズ': 70,
-            '香り': 100,
-            'タイプ': 130,
-            'シートカラー': 160,
-            '座幅': 170,
-            'シートタイプ': 180,
-            '座面高さ': 190,
-            'シートカラー（タイプ）': 200,
-            '前座高': 210,
-            '前座幅': 220,
-            '柄': 230,
-            'フレームカラー': 240,
-            '左右': 250,
-            '頭キャップカラー': 260,
-            'ヘッドサポートタイプ': 270,
-            'サイズ（カラー）': 280,
-            '固さ': 290,
-            'タイプ(カラー)': 300,
-            'アームサポート': 310,
-            '取付位置': 320,
-            '色': 330,
-            'カラー（タイプ）': 340,
-            '選択枝2': 350,
-            '味': 360,
-            'サイズ（cm）': 370,
-            '天板カラー': 380,
-            'レバー位置': 390,
-            '布張り地カラー': 400,
-            '厚さ': 410,
-            'タイヤサイズ': 420,
-            'カバーカラー': 430,
-            'カバータイプ': 440,
-            'キャスタサイズ': 450,
-            'バッグカラー': 460,
-            'ティッピングパイプ径': 470,
-            '木部カラー': 480,
-            '操作側': 490,
-            'バックサポートカラー': 500,
-            'ボディカラー': 510,
-            '': 520
-        }
+        color_list = [
+            'カラー', '色',
+            'カラー（タイプ）', 'カラー・タイプ',
+            'カラー（音）', 'タイプ／カラー',
+            'タイプ(カラー)', 'タイプ（カラー）',
+            '本体カラー', '塗色',
+            'カラータイプ／袋', 'タイヤカラー',
+            '張地カラー', 'ユニットカラー',
+            'グリップカラー', '棚・手すりカラー',
+            '棚カラー', '天板カラー',
+            '布張り地カラー', 'カバーカラー',
+            'バッグカラー', 'シートカラー',
+            'シートカラー（タイプ）', 'フレームカラー',
+            '頭キャップカラー', '木部カラー',
+            'バックサポートカラー', 'ボディカラー',
+            'カラー（材質）'
+        ]
+        type_list = [
+            'キャスター', 'ハンガー部',
+            'ハンドリム外径', '右用／左用',
+            '強さ', '犬種',
+            '材質', '取付金具タイプ',
+            '種類', '周波数（ch）',
+            '度数', '猫の種類',
+            '肘掛け', '負荷',
+            '風味', '名称',
+            '毛の硬さ', '名称／型番',
+            '香り', 'タイプ',
+            'シートタイプ', '柄',
+            '左右', 'ヘッドサポートタイプ',
+            '固さ', 'アームサポート',
+            '取付位置', '選択枝2',
+            '味', 'レバー位置',
+            'カバータイプ', '操作側'
+        ]
+        size_list = [
+            '駆動輪サイズ', '高さ',
+            '座幅サイズ', '座面',
+            '座面高', '座面幅',
+            '床下', '長さ',
+            '幅', 'サイズ',
+            '座幅', '座面高さ',
+            '前座高', '前座幅',
+            'サイズ（カラー）', 'サイズ（cm）',
+            'サイズ（cm)', '厚さ',
+            'タイヤサイズ', 'キャスタサイズ',
+            'ティッピングパイプ径', '幅サイズ',
+            '最うz'
+        ]
 
-        # for data in enumerate(data_list):
+        color_count = 0
+        type_count = 40
+        size_count = 80
+        other_count = 120
+
         for data in data_list:
-            # 初期値として510を設定。count_dictのキーにない場合は520に。
-            start_colum = 520
-            # 例えば、key: カラー, value: color
-            # 半角の')'を全角の'）'に変換
-            trans_data = data[0].replace('cm)', 'cm）')
-            for key, value in count_dict.items():
-                if trans_data == key:
-                    start_colum = value
-                    break
+            # start_columの初期値の設定
+            start_colum = 120
 
-            for option_count, option in enumerate(data[1:]):
+            if data[0] in color_list:
+                start_colum = color_count
+            elif data[0] in type_list:
+                start_colum = type_count
+            elif data[0] in size_list:
+                start_colum = size_count
+            else:
+                start_colum = other_count
+
+            for option in data[1:]:
                 try:
-                    return_list[start_colum + option_count] = (
-                        bytes(data[0] + ':' + option, 'utf-8')
+                    return_list[start_colum] = (
+                        bytes(str(data[0]) + ':' + option, 'utf-8')
                         .decode('utf-8'))
                 except IndexError:
-                    logmessage.logprint(start_colum + option_count)
-                    logmessage.logprint('Error! IndexError')
+                    logprint('Error! IndexError')
                 else:
-                    pass
+                    start_colum += 1
+
+            if data[0] in color_list:
+                color_count = start_colum
+            elif data[0] in type_list:
+                type_count = start_colum
+            elif data[0] in size_list:
+                size_count = start_colum
+            else:
+                other_count = start_colum
 
         return return_list
 
-    def get_product_info(self, url, path=''):
-        u"""商品個別のurlを受け取り、商品情報をリストにして返す
+    def set_productlist_one_to_seven(self, product_list, url):
+        u"""product_listの1から7までのデータを取得してsetして返す。
         """
-        if self.driver is None:
-            logmessage.logprint('driverの取得に失敗しています。')
-            return None
-
-        not_find = textfile.TextFile('result', 'not_find_product.txt')
-        not_find_file = not_find.open_append_mode()
-
-        logmessage.logprint(url)
-
-        self.get_phantom_page(url, self.driver)
-
-        # 要素数が34のリストを作成する。
-        product_list = [''] * 544
-
         # name
         product_list[0] = self.get_text_by_xpath(
             self.driver,
@@ -750,17 +687,16 @@ class Scraping():
         if product_list[0] is '':
             not_file = self.get_text_by_xpath(
                 self.driver,
-                "//div[@id='CentPageErr1']/table",
-            )
+                "//div[@id='CentPageErr1']/table",)
             if not_file.startswith('商品情報を表示できません。'):
-                not_find_file.write(url + '\n')
+                write_not_find_page_url(url)
+
             return None
 
         # jan
         jan = self.get_text_by_xpath(
             self.driver,
-            "//div[@class='mdItemInfoCode']/p"
-            )
+            "//div[@class='mdItemInfoCode']/p")
 
         if jan is not '':
             # ：(コロン)は全角
@@ -803,6 +739,11 @@ class Scraping():
             "//div[@id='CentItemCaption1']/p",
             '商品説明がありません。')
 
+        return product_list
+
+    def set_productlist_eight_to_twelve(self, product_list):
+        u"""product_listの8列目から12列目までのデータを取得してsetして返す。
+        """
         # image
         image_attrs_list = (self.get_attribute_list_by_xpath(
             self.driver,
@@ -822,6 +763,11 @@ class Scraping():
                 product_list[7 + image_count] = bytes(
                     image_name, 'utf-8').decode('utf-8')
 
+        return product_list
+
+    def set_productlist_thirteen(self, product_list):
+        u"""product_listの13列目のデータを取得してsetして返す。
+        """
         # Gimage1
         image_attrs = (self.get_attribute_by_xpath
                        (self.driver,
@@ -844,6 +790,11 @@ class Scraping():
                     image_name)
                 product_list[12] = bytes(image_name, 'utf-8').decode('utf-8')
 
+        return product_list
+
+    def set_productlist_fourteen(self, product_list, path):
+        u"""product_listの14列目のデータを取得してsetして返す。
+        """
         # path
         if path is '':
             # path(カテゴリ)を取得
@@ -854,6 +805,11 @@ class Scraping():
 
         product_list[13] = bytes(path, 'utf-8').decode('utf-8')
 
+        return product_list
+
+    def set_productlist_fifteen(self, product_list):
+        u"""product_listの14列目のデータを取得してsetして返す。
+        """
         # list
         data_list = self.get_select_list_by_xpath(
             self.driver,
@@ -866,11 +822,38 @@ class Scraping():
                 try:
                     product_list[14 + select_count] = selection
                 except IndexError:
-                    logmessage.logprint('Error! IndexError')
+                    logprint('Error! IndexError')
                 else:
                     pass
 
-        not_find_file.close()
+        return product_list
+
+    def get_product_info(self, url, path=''):
+        u"""商品個別のurlを受け取り、商品情報をリストにして返す
+        引数:
+            * url
+            * path: 上位のページから遷移した場合にpathを引数として引き継ぐ。
+                直接遷移した場合はpathを渡されない。
+        """
+        if self.driver is None:
+            logprint('driverの取得に失敗しています。')
+            return None
+
+        logprint(url)
+
+        self.get_phantom_page(url, self.driver)
+
+        # 要素数が34のリストを作成する。
+        product_list = [''] * 174
+
+        product_list = self.set_productlist_one_to_seven(product_list, url)
+        if product_list is None:
+            return None
+
+        product_list = self.set_productlist_eight_to_twelve(product_list)
+        product_list = self.set_productlist_thirteen(product_list)
+        product_list = self.set_productlist_fourteen(product_list, path)
+        product_list = self.set_productlist_fifteen(product_list)
 
         return product_list
 
@@ -899,7 +882,7 @@ class Scraping():
         for url in url_list:
             if link_serial_number % 20 == 0:
                 if link_serial_number != 0:
-                    logmessage.logprint(
+                    logprint(
                         str(link_serial_number) + '個目のカテゴリを処理しています。')
 
             bs_obj = self.get_page(url)
@@ -942,7 +925,15 @@ class FactorialTest(unittest.TestCase):
         if product_list is None:
             self.assertEqual(product_list, None)
         else:
-            self.assertEqual(len(product_list), 544)
+            self.assertEqual(len(product_list), 174)
+
+    def test_not_find_product(self):
+        u"""商品情報を取得するテスト
+        """
+        url = 'http://store.shopping.yahoo.co.jp/drmart-1/cm-200000.html'
+        product_list = self.scraping.get_product_info(url)
+
+        self.assertEqual(product_list, None)
 
     def test_get_product_info_cm(self):
         u"""商品情報を取得するテスト
@@ -953,7 +944,7 @@ class FactorialTest(unittest.TestCase):
         if product_list is None:
             self.assertEqual(product_list, None)
         else:
-            self.assertEqual(len(product_list), 544)
+            self.assertEqual(len(product_list), 174)
 
     def tearDown(self):
         u"""クローズ処理など
