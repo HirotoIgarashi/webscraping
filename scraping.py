@@ -20,7 +20,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # My library
 from logmessage import logprint
-import csvfile
+# import csvfile
 import textfile
 
 
@@ -44,73 +44,6 @@ def write_not_find_page_url(url):
     not_find_file.close()
 
 
-def make_header_list():
-    u"""csvファイル用のヘッダーを作成する。
-    """
-    header_list = [
-        'name', 'jan', 'abstract', 'price', 'explanation',
-        'code', 'caption', 'image1', 'image2', 'image3',
-        'image4', 'image5', 'Gimage1', 'path']
-
-    header_name_40 = ['color-']
-
-    header_name_30 = [
-        'model-number-',
-        'size-',
-        'fragrance-',
-        'type-'
-        ]
-
-    header_name_10 = [
-        'seat-color-', 'seat-width-', 'seat-type-',
-        'seat-height-', 'seat-color-type-', 'sitting-height-',
-        'sitting-width-', 'pattern-', 'frame-color-',
-        'left-and-right-', 'head-cap-color-', 'head-supprot-type-',
-        'size-color-', 'firmness-', 'type-color-',
-        'arm-support-', 'mount-position-', 'color2-',
-        'color-type-', 'choice2-', 'taste-',
-        'size-cm-', 'top-board-color-', 'lever-position-',
-        'cloth-color-', 'thickness-', 'tire-size-',
-        'cover-color-', 'cover-type-', 'caster-size-',
-        'bag-color-', 'tipping-pipe-', 'wood-color-',
-        'operating-side-', 'back-support-color-', 'body-color-',
-        '']
-
-    header_list_half = []
-    for name in header_name_40:
-        header_list_half.extend(make_header_name(name, 40))
-
-    for name in header_name_30:
-        header_list_half.extend(make_header_name(name, 30))
-
-    for name in header_name_10:
-        header_list_half.extend(make_header_name(name, 10))
-
-    header_list.extend(header_list_half)
-
-    return header_list
-
-
-def decide_start_column(data, color_list, type_list, size_list, other_list):
-    u"""column数を決定する。
-    """
-    title = data[0]
-    if title in color_list[1]:
-        # start_colum = color_count
-        start_colum = color_list[0]
-    elif title in type_list[1]:
-        # start_colum = type_count
-        start_colum = type_list[0]
-    elif title in size_list[1]:
-        # start_colum = size_count
-        start_colum = size_list[0]
-    else:
-        # start_colum = other_count
-        start_colum = other_list[0]
-
-    return start_colum
-
-
 class Scraping():
     u"""Scrapingクラス
     """
@@ -125,10 +58,6 @@ class Scraping():
         self.product_page_list = []
 
         self.base_url = base_url
-
-        # Csvfileクラス
-        header_list = make_header_list()
-        self.csv_file = csvfile.Csvfile('./drmart-1/', header_list)
 
         for key, value in enumerate(headers):
             (webdriver
@@ -160,8 +89,9 @@ class Scraping():
 
         self.driver = get_phantom_driver()
         if self.driver is not None:
-            self.category_driver = get_phantom_driver()
+            # self.category_driver = get_phantom_driver()
             self.product_driver = get_phantom_driver()
+            self.link_driver = get_phantom_driver()
 
     @staticmethod
     def get_only_number(data):
@@ -181,7 +111,8 @@ class Scraping():
 
         return int_data
 
-    def get_page(self, driver, url):
+    @staticmethod
+    def get_page(driver, url):
         u"""urlを受け取りページを取得する。
         """
         try:
@@ -209,7 +140,11 @@ class Scraping():
         u"""urlを受け取りページを取得する。
         """
         try:
+            # old_page = (self.driver.find_element_by_tag_name('html'))
             self.product_driver.get(url)
+            time.sleep(3)
+            # WebDriverWait(self.driver, 30).until(
+            #     EC.staleness_of(old_page))
         except HTTPError as error_code:
             logprint(url)
             logprint(error_code)
@@ -229,7 +164,8 @@ class Scraping():
 
         return self.product_driver
 
-    def execute_login(self, driver, login_dict):
+    @staticmethod
+    def execute_login(driver, login_dict):
         u"""ログインを実行する。
         """
         try:
@@ -272,7 +208,12 @@ class Scraping():
         """
         for value in input_list:
             # element = self.driver.find_element_by_xpath(value[0])
-            element = self.driver.find_element_by_name(value[0])
+            try:
+                element = self.driver.find_element_by_name(value[0])
+            except NoSuchElementException:
+                logprint(value[0] + 'の指定が間違っています。')
+                return None
+
             if element.get_attribute('type') == 'checkbox':
                 if element.is_selected():
                     element.click()
@@ -452,7 +393,7 @@ class Scraping():
         return absolute_url
 
     @staticmethod
-    def get_text_by_xpath(phantom_page, xpath, error_message=''):
+    def get_text_by_xpath(driver, xpath, error_message=''):
         u"""driverと検索するclassの名前を受け取り結果を返す。
         目的:
             * xpathに一致するテキストを返す
@@ -467,7 +408,7 @@ class Scraping():
             * '' : データが一致しなかった時
         """
         try:
-            data = phantom_page.find_element_by_xpath(xpath).text
+            data = driver.find_element_by_xpath(xpath).text
         except NoSuchElementException:
             if error_message is '':
                 pass
@@ -482,11 +423,11 @@ class Scraping():
         return data
 
     @staticmethod
-    def get_attribute_by_xpath(phantom_page, xpath, attribute):
+    def get_attribute_by_xpath(driver, xpath, attribute):
         u"""driverと検索するclassの名前を受け取り結果を返す。
         """
         try:
-            data = (phantom_page
+            data = (driver
                     .find_element_by_xpath(xpath).get_attribute(attribute))
         except NoSuchElementException:
             return None
@@ -496,17 +437,19 @@ class Scraping():
         return data
 
     @staticmethod
-    def get_attribute_list_by_xpath(phantom_page, xpath, attribute):
+    def get_attribute_list_by_xpath(driver, xpath, attribute):
         u"""driverと検索するclassの名前を受け取り結果のリストを返す。
         """
         return_list = []
         try:
-            data_list = (phantom_page
+            data_list = (driver
                          .find_elements_by_xpath(xpath))
         except NoSuchElementException:
-            return None
+            pass
+            # return None
         except WebDriverException:
-            return None
+            pass
+            # return None
 
         for data in data_list:
             return_list.append(data.get_attribute(attribute))
@@ -624,6 +567,29 @@ class Scraping():
 
         return self.page_list
 
+    @staticmethod
+    def get_product_url(row, link_text):
+        u"""
+        目的 :
+            * 商品が表示されるリンクを受け取りクリックする。
+        引数 :
+            * row - 商品リストの行データ
+            * link_text - リンクテキスト
+        設定 :
+                *
+        戻り値 : なし
+        例外発行 : なし
+        """
+        try:
+            # a_tag = row.find_element_by_link_text('詳細を見る')
+            a_tag = row.find_element_by_link_text(link_text)
+        except NoSuchElementException:
+            return None
+        else:
+            url = a_tag.get_attribute('href')
+
+        return url
+
 
 class FactorialTest(unittest.TestCase):
     u"""テスト用のクラス
@@ -699,7 +665,7 @@ class FactorialTest(unittest.TestCase):
         u"""pageを取得するテスト
         """
         url = 'https://cust.sanwa.co.jp/'
-        page = self.scraping.get_page(url)
+        page = self.scraping.get_page(self.scraping.driver, url)
         data = page.find_element_by_xpath('//body').get_attribute('outerHTML')
         self.assertTrue(data.startswith('<body'))
 
@@ -707,18 +673,18 @@ class FactorialTest(unittest.TestCase):
         u"""loginするテスト
         """
         url = 'https://cust.sanwa.co.jp/'
-        page = self.scraping.get_page(url)
+        page = self.scraping.get_page(self.scraping.driver, url)
 
         login_div = "//div[@class='login_inaccount']"
         login_dict = {
             'login_id': "health-welfare@ghjapan.jp",
-            'login_id_path': login_div + "/p/input[@id='MailAddress']",
+            'login_id_name': "MailAddress",
             'password': "ghjapan006",
-            'password_path': login_div + "/p/input[@id='PassWord']",
+            'password_name': "PassWord",
             'submit_path': login_div + "/p/a"
         }
 
-        page = self.scraping.execute_login(login_dict)
+        page = self.scraping.execute_login(self.scraping.driver, login_dict)
         data = page.find_element_by_xpath('//body').get_attribute('outerHTML')
         company_name = page.find_element_by_xpath(
             "//p[@class='head_customer_name_top']").text
@@ -729,21 +695,22 @@ class FactorialTest(unittest.TestCase):
         u"""在庫照会をクリックして検索画面に遷移するテスト
         """
         url = 'https://cust.sanwa.co.jp/'
-        page = self.scraping.get_page(url)
+        page = self.scraping.get_page(self.scraping.driver, url)
 
         login_div = "//div[@class='login_inaccount']"
         login_dict = {
-            'login_id': "health-welfare@ghjapan.jp",
-            'login_id_path': login_div + "/p/input[@id='MailAddress']",
-            'password': "ghjapan006",
-            'password_path': login_div + "/p/input[@id='PassWord']",
+            'login_id': 'health-welfare@ghjapan.jp',
+            'login_id_name': 'MailAddress',
+            'password': 'ghjapan006',
+            'password_name': 'PassWord',
             'submit_path': login_div + "/p/a"
         }
 
-        self.scraping.execute_login(login_dict)
+        self.scraping.execute_login(self.scraping.driver, login_dict)
         data = page.find_element_by_xpath('//body').get_attribute('outerHTML')
 
-        page = self.scraping.execute_link_click("//li/p/a/img[@alt='在庫照会']")
+        page = self.scraping.execute_link_click(
+            self.scraping.driver, "//li/p/a/img[@alt='在庫照会']")
         data = page.find_element_by_xpath('//body').get_attribute('outerHTML')
 
         self.assertTrue(data.startswith('<body'))

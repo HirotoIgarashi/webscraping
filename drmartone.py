@@ -1,5 +1,6 @@
 # -*- conding: utf-8 -*-
 u"""スクレイピング用のライブラリ
+drmart用のクラス定義
 """
 import re
 import random
@@ -788,6 +789,7 @@ class Drmartone(Scraping):
         if explanation is not None:
             product_list[4] = bytes(explanation, 'utf-8').decode('utf-8')
 
+        # code
         p_list = self.get_list_by_xpath(
             self.driver,
             "//div[@id='abuserpt']/p")
