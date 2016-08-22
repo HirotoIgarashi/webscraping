@@ -108,7 +108,7 @@ class Csvfile():
 
                 # 行数を取得する。
                 try:
-                    file_handler = open(file_path)
+                    file_handler = open(file_path, encoding='utf-8')
                 except IOError:
                     logprint('CSVファイルのオープンでエラーが発生しました。')
                 line_num = len(file_handler.readlines())
