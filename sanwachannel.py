@@ -143,9 +143,11 @@ class Sanwachannel(Scraping):
                     image_name_list = image_name.split('_')
                     if len(image_name_list) != 0:
                         image_name_last = image_name_list[1]
-                        image_name_last = image_name_last.replace('ft', '')
-                        image_name_last = image_name_last.replace('sp', '2')
-                        image_name = image_name_list[0] + '_' + image_name_last
+                        image_name_last = image_name_last.split('.')
+                        image_name = (image_name_list[0]
+                                      + '_'
+                                      + str(image_count + 1)
+                                      + image_name_last[1])
 
                     fetr_list[i + image_count] = image_name
                     # imageをダウンロードして保存する。
