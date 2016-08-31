@@ -11,6 +11,7 @@ import sanwachannel
 # import imagefile
 import textfile
 import csvfile
+import imagefile
 
 URL = 'https://cust.sanwa.co.jp'
 
@@ -194,11 +195,6 @@ if __name__ == '__main__':
         SANWACHANNEL.get_page(SANWACHANNEL.driver, URL)
         SANWACHANNEL.execute_login(SANWACHANNEL.driver, LOGIN_DICT)
 
-        # ログイン処理 - product_driver
-        # SANWACHANNEL.get_page(SANWACHANNEL.product_driver, URL)
-        # SANWACHANNEL.execute_login(
-        #     SANWACHANNEL.product_driver, LOGIN_DICT)
-
         time.sleep(5)
         # 在庫照会をクリック
         SANWACHANNEL.execute_link_click(
@@ -239,7 +235,10 @@ if __name__ == '__main__':
     if PRODUCT_URL_FILE is not None:
         for line in PRODUCT_URL_FILE:
             if line != '\n':
-                PRODUCT_URL.append(line.strip())
+                if line.strip() in PRODUCT_URL:
+                    pass
+                else:
+                    PRODUCT_URL.append(line.strip())
         PRODUCT_URL_FILE.close()
     else:
         logprint("URL格納ファイル処理で予期せぬエラーが発生しました。")
@@ -250,7 +249,6 @@ if __name__ == '__main__':
         if url in COMPLETE_PRODUCT:
             pass
         else:
-            logprint(url)
             product_page = SANWACHANNEL.get_product_driver(url)
             # 品名、製品品番、JANコード、標準価格、仕切価格を取得する。
             product_text = SANWACHANNEL.get_product_text(
@@ -267,12 +265,31 @@ if __name__ == '__main__':
             # 商品画像を取得する。
             image_list = SANWACHANNEL.make_image_row(
                 product_page, PRODUCT_IMAGE_XPATH)
-            product_text.extend(image_list[:1])
+
+            # '_ma'を削除する。
+            image_name = image_list[0][0].replace('_MA', '')
+            image_name = image_name.lower()
+
+            # イメージをダウンロードして保存する。
+            imagefile.download_and_save_dir_direct(
+                image_list[0][1], 'sanwaimage', image_name)
+            product_text.extend([image_name])
 
             # 商品仕様画像を取得する。
             spec_image_list = SANWACHANNEL.make_image_row(
                 product_page, PRODUCT_SPEC_IMAGE_XPATH)
-            product_text.extend(spec_image_list)
+
+            # イメージをダウンロードして保存する。
+            for image_list in spec_image_list:
+                if len(image_list) != 0:
+                    image_name = image_list[0].lower()
+                    imagefile.download_and_save_dir_direct(
+                        image_list[1],
+                        'sanwaimage/icon',
+                        image_name)
+                    product_text.extend([image_name])
+                else:
+                    product_text.extend([''])
 
             # 特長、仕様、対応機種を取得する。
             product_fetr = SANWACHANNEL.get_product_fetr(

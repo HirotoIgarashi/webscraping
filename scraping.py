@@ -139,6 +139,7 @@ class Scraping():
     def get_product_driver(self, url):
         u"""urlを受け取りページを取得する。
         """
+        logprint(url)
         try:
             # old_page = (self.driver.find_element_by_tag_name('html'))
             self.product_driver.get(url)

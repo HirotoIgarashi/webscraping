@@ -71,7 +71,7 @@ class Sanwachannel(Scraping):
 
         return return_text
 
-    def make_fetr_row(self, driver, fetr_object):
+    def make_fetr_row(self, fetr_object):
         """特長、仕様、適応機種のリストを返す
         """
         fetr_list = [''] * 33
@@ -139,13 +139,18 @@ class Sanwachannel(Scraping):
                 if image_name is not None:
                     image_name = image_name.group()
                     # 小文字に変換する。
-                    fetr_list[i + image_count] = image_name.lower()
+                    image_name = image_name.lower()
+                    image_name_list = image_name.split('_')
+                    if len(image_name_list) != 0:
+                        image_name_last = image_name_list[1]
+                        image_name_last = image_name_last.replace('ft', '')
+                        image_name_last = image_name_last.replace('sp', '2')
+                        image_name = image_name_list[0] + '_' + image_name_last
+
+                    fetr_list[i + image_count] = image_name
                     # imageをダウンロードして保存する。
                     imagefile.download_and_save_dir_direct(
-                        image_attrs, 'sanwaimage', image_name.lower())
-
-            # i += 1
-            # fetr_list[i] = fetr.get_attribute('innerHTML').strip()
+                        image_attrs, 'sanwaimage', image_name)
 
         return fetr_list
 
@@ -162,10 +167,7 @@ class Sanwachannel(Scraping):
             if image_name is not None:
                 image_name = image_name.group()
                 # 小文字に変換する。
-                image_list[image_count] = image_name.lower()
-                # imageをダウンロードして保存する。
-                imagefile.download_and_save_dir_direct(
-                    image_attrs, 'sanwaimage', image_name.lower())
+                image_list[image_count] = [image_name, image_attrs]
 
         return image_list
 
@@ -177,14 +179,13 @@ class Sanwachannel(Scraping):
                 直接遷移した場合はpathを渡されない。
         """
         try:
-            fetr_object = self.get_list_by_xpath(
-                self.product_driver, fetr_xpath)
+            fetr_object = self.get_list_by_xpath(product_page, fetr_xpath)
+
         except IndexError as error_code:
             print(error_code)
         else:
             if fetr_object is not None:
-                fetr_list = self.make_fetr_row(
-                    self.product_driver, fetr_object)
+                fetr_list = self.make_fetr_row(fetr_object)
 
         return fetr_list
 
@@ -494,29 +495,29 @@ class FactorialTest(unittest.TestCase):
 
     #         i += 1
 
-    def test_get_product_info(self):
-        u"""商品単体の取得のテスト エルゴノミクスリフトアップデスク
-        """
-        url = 'https://cust.sanwa.co.jp/products/detail.asp?code=MR-ERGST1'
-        product_page = self.sanwachannel.get_product_driver(url)
-        data = self.sanwachannel.get_product_text(
-            product_page, self.get_items_list)
-        self.assertEqual(data[0], "エルゴノミクスリフトアップデスク")
-        self.assertEqual(data[1], "MR-ERGST1")
-        self.assertEqual(data[2], "4969887158838")
-        self.assertEqual(data[3], "￥43,800")
-        self.assertEqual(data[4], "￥28,470")
-        fetr_data = self.sanwachannel.get_product_fetr(
-            product_page, "//div[@class='fetr_area']")
-        self.assertTrue(fetr_data)
+    # def test_get_product_info(self):
+    #     u"""商品単体の取得のテスト エルゴノミクスリフトアップデスク
+    #     """
+    #     url = 'https://cust.sanwa.co.jp/products/detail.asp?code=MR-ERGST1'
+    #     product_page = self.sanwachannel.get_product_driver(url)
+    #     data = self.sanwachannel.get_product_text(
+    #         product_page, self.get_items_list)
+    #     self.assertEqual(data[0], "エルゴノミクスリフトアップデスク")
+    #     self.assertEqual(data[1], "MR-ERGST1")
+    #     self.assertEqual(data[2], "4969887158838")
+    #     self.assertEqual(data[3], "￥43,800")
+    #     self.assertEqual(data[4], "￥28,470")
+    #     fetr_data = self.sanwachannel.get_product_fetr(
+    #         product_page, "//div[@class='fetr_area']")
+    #     self.assertTrue(fetr_data)
 
-        link_dist_info = self.sanwachannel.get_link_dist_info(
-            product_page, "//p[@class='sanwaweb_btn']/a")
+    #     link_dist_info = self.sanwachannel.get_link_dist_info(
+    #         product_page, "//p[@class='sanwaweb_btn']/a")
 
-        self.assertEqual(link_dist_info[0], 'サンワチャンネル')
-        self.assertEqual(link_dist_info[1], 'デスク・ラック')
-        self.assertEqual(link_dist_info[2], 'デスク:上下昇降デスク（スタンディングデスク）')
-        self.assertEqual(link_dist_info[3], '座り作業、立ち作業の切り替えを容易に行い、疲労軽減。')
+    #     self.assertEqual(link_dist_info[0], 'サンワチャンネル')
+    #     self.assertEqual(link_dist_info[1], 'デスク・ラック')
+    #     self.assertEqual(link_dist_info[2], 'デスク:上下昇降デスク（スタンディングデスク）')
+    #     self.assertEqual(link_dist_info[3], '座り作業、立ち作業の切り替えを容易に行い、疲労軽減。')
 
     # def test_get_product_info_4_M(self):
     #     u"""商品単体の取得のテスト 4-M
@@ -535,30 +536,57 @@ class FactorialTest(unittest.TestCase):
     #     print(fetr_data[0])
     #     print(fetr_data[1])
 
-    def test_get_product_info_blueyooth(self):
+    # def test_get_product_info_blueyooth(self):
+    #     u"""商品単体の取得のテスト
+    #     """
+    #     url = 'https://cust.sanwa.co.jp/products/detail.asp?code=1660KIT'
+    #     product_page = self.sanwachannel.get_product_driver(url)
+    #     data = self.sanwachannel.get_product_text(
+    #         product_page, self.get_items_list)
+    #     self.assertEqual(data[0], "Bluetoothバーコードスキャナ1660キット")
+    #     self.assertEqual(data[1], "1660KIT")
+    #     self.assertEqual(data[2], "")
+    #     self.assertEqual(data[3], "オープン価格")
+    #     self.assertEqual(data[4], "￥58,000")
+    #     fetr_data = self.sanwachannel.get_product_fetr(
+    #         product_page, "//div[@class='fetr_area']")
+
+    #     self.assertEqual(len(fetr_data[22]), 106)
+    #     self.assertEqual(len(fetr_data[23]), 0)
+    #     link_dist_info = self.sanwachannel.get_link_dist_info(
+    #         product_page, "//p[@class='sanwaweb_btn']/a")
+
+    #     self.assertEqual(link_dist_info[0], 'サンワチャンネル')
+    #     self.assertEqual(link_dist_info[1], '周辺機器')
+    #     self.assertEqual(link_dist_info[2], 'その他:バーコードスキャナ')
+    #     self.assertEqual(
+    #         link_dist_info[3], '最も便利で、最も多才な、小型・軽量Bluetoothスキャナ。')
+
+    def test_get_product_info_cai_cab(self):
         u"""商品単体の取得のテスト
         """
-        url = 'https://cust.sanwa.co.jp/products/detail.asp?code=1660KIT'
+        url = 'https://cust.sanwa.co.jp/products/detail.asp?code=CAI-CAB32'
         product_page = self.sanwachannel.get_product_driver(url)
         data = self.sanwachannel.get_product_text(
             product_page, self.get_items_list)
-        self.assertEqual(data[0], "Bluetoothバーコードスキャナ1660キット")
-        self.assertEqual(data[1], "1660KIT")
-        self.assertEqual(data[2], "")
-        self.assertEqual(data[3], "オープン価格")
-        self.assertEqual(data[4], "￥58,000")
+        self.assertEqual(data[0], "iPad・タブレットトロリー（32台収納）")
+        self.assertEqual(data[1], "CAI-CAB32")
+        self.assertEqual(data[2], "4969887130490")
+        self.assertEqual(data[3], "￥680,000")
+        self.assertEqual(data[4], "￥408,000")
         fetr_data = self.sanwachannel.get_product_fetr(
             product_page, "//div[@class='fetr_area']")
+        print(fetr_data)
 
-        self.assertEqual(len(fetr_data[22]), 106)
-        self.assertEqual(len(fetr_data[23]), 0)
         link_dist_info = self.sanwachannel.get_link_dist_info(
             product_page, "//p[@class='sanwaweb_btn']/a")
 
         self.assertEqual(link_dist_info[0], 'サンワチャンネル')
-        self.assertEqual(link_dist_info[1], '周辺機器')
-        self.assertEqual(link_dist_info[2], 'その他:バーコードスキャナ')
-        self.assertEqual(link_dist_info[3], '最も便利で、最も多才な、小型・軽量Bluetoothスキャナ。')
+        self.assertEqual(link_dist_info[1], 'デスク・ラック')
+        self.assertEqual(link_dist_info[2], '機器収納キャビネット:タブレット')
+        self.assertEqual(
+            link_dist_info[3],
+            '複数台のiPad・タブレットを同時に保管、充電、同期できる。32台収納。iPad Pro収納可能、2.4A充電可能。')
 
     def tearDown(self):
         u"""クローズ処理など
