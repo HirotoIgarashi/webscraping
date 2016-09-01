@@ -254,6 +254,8 @@ if __name__ == '__main__':
             product_text = SANWACHANNEL.get_product_text(
                 product_page, GET_ITEMS_LIST)
 
+            model_number = product_text[1]
+
             # 「￥」と「,」を削除する。
             if product_text[3].startswith('￥'):
                 product_text[3] = SANWACHANNEL.get_only_number(
@@ -266,14 +268,19 @@ if __name__ == '__main__':
             image_list = SANWACHANNEL.make_image_row(
                 product_page, PRODUCT_IMAGE_XPATH)
 
-            # '_ma'を削除する。
-            image_name = image_list[0][0].replace('_MA', '')
-            image_name = image_name.lower()
+            if len(image_list) != 0:
+                # '_ma'を削除する。
+                # image_name = image_list[0][0].replace('_MA', '')
+                # print(image_name)
+                extension_list = image_list[0][0].split('.')
+                extension = extension_list[1]
+                image_name = model_number
+                image_name = image_name.lower() + '.' + extension
 
-            # イメージをダウンロードして保存する。
-            imagefile.download_and_save_dir_direct(
-                image_list[0][1], 'sanwaimage', image_name)
-            product_text.extend([image_name])
+                # イメージをダウンロードして保存する。
+                imagefile.download_and_save_dir_direct(
+                    image_list[0][1], 'sanwaimage', image_name)
+                product_text.extend([image_name])
 
             # 商品仕様画像を取得する。
             spec_image_list = SANWACHANNEL.make_image_row(
@@ -293,7 +300,7 @@ if __name__ == '__main__':
 
             # 特長、仕様、対応機種を取得する。
             product_fetr = SANWACHANNEL.get_product_fetr(
-                product_page, FETR_AREA_XPATH)
+                product_page, FETR_AREA_XPATH, model_number)
             product_text.extend(product_fetr)
             # リンク先の情報を取得する。
             link_dist_info = SANWACHANNEL.get_link_dist_info(

@@ -71,7 +71,7 @@ class Sanwachannel(Scraping):
 
         return return_text
 
-    def make_fetr_row(self, fetr_object):
+    def make_fetr_row(self, fetr_object, model_number):
         """特長、仕様、適応機種のリストを返す
         """
         fetr_list = [''] * 33
@@ -131,10 +131,12 @@ class Sanwachannel(Scraping):
                 fetr, fetr_img_xpath1, "src")
             image_attrs_list2 = self.get_attribute_list_by_xpath(
                 fetr, fetr_img_xpath2, "src")
+            tmp = image_attrs_list1 + image_attrs_list2
 
             i += 1
-            for image_count, image_attrs in enumerate(
-                    image_attrs_list1 + image_attrs_list2):
+            # for image_count, image_attrs in enumerate(
+            #         image_attrs_list1 + image_attrs_list2):
+            for image_count, image_attrs in enumerate(tmp):
                 image_name = re.search(r"[\da-zA-Z_-]+.(jpg|gif)", image_attrs)
                 if image_name is not None:
                     image_name = image_name.group()
@@ -144,10 +146,18 @@ class Sanwachannel(Scraping):
                     if len(image_name_list) != 0:
                         image_name_last = image_name_list[1]
                         image_name_last = image_name_last.split('.')
-                        image_name = (image_name_list[0]
-                                      + '_'
-                                      + str(image_count + 1)
-                                      + image_name_last[1])
+                        if i == 1:
+                            image_name = (model_number.lower()
+                                          + '_'
+                                          + str(image_count + 1)
+                                          + '.'
+                                          + image_name_last[1])
+                        elif i == 12:
+                            image_name = (model_number.lower()
+                                          + '_2'
+                                          + str(image_count + 1)
+                                          + '.'
+                                          + image_name_last[1])
 
                     fetr_list[i + image_count] = image_name
                     # imageをダウンロードして保存する。
@@ -173,7 +183,7 @@ class Sanwachannel(Scraping):
 
         return image_list
 
-    def get_product_fetr(self, product_page, fetr_xpath):
+    def get_product_fetr(self, product_page, fetr_xpath, model_number):
         u"""商品個別のurlを受け取り、商品情報をリストにして返す
         引数:
             * url
@@ -184,10 +194,10 @@ class Sanwachannel(Scraping):
             fetr_object = self.get_list_by_xpath(product_page, fetr_xpath)
 
         except IndexError as error_code:
-            print(error_code)
+            logprint(error_code)
         else:
             if fetr_object is not None:
-                fetr_list = self.make_fetr_row(fetr_object)
+                fetr_list = self.make_fetr_row(fetr_object, model_number)
 
         return fetr_list
 
@@ -576,9 +586,9 @@ class FactorialTest(unittest.TestCase):
         self.assertEqual(data[2], "4969887130490")
         self.assertEqual(data[3], "￥680,000")
         self.assertEqual(data[4], "￥408,000")
-        fetr_data = self.sanwachannel.get_product_fetr(
-            product_page, "//div[@class='fetr_area']")
-        print(fetr_data)
+        # fetr_data = self.sanwachannel.get_product_fetr(
+        #     product_page, "//div[@class='fetr_area']")
+        # print(fetr_data)
 
         link_dist_info = self.sanwachannel.get_link_dist_info(
             product_page, "//p[@class='sanwaweb_btn']/a")
