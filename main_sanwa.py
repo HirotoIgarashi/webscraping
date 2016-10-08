@@ -268,7 +268,7 @@ if __name__ == '__main__':
             image_list = SANWACHANNEL.make_image_row(
                 product_page, PRODUCT_IMAGE_XPATH)
 
-            if len(image_list) != 0:
+            if len(image_list[0]) != 0:
                 # '_ma'を削除する。
                 # image_name = image_list[0][0].replace('_MA', '')
                 # print(image_name)
